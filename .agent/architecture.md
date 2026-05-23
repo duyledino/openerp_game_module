@@ -1,61 +1,113 @@
-# Database Architecture: Game Management System
-
-This document outlines the core relational database structure for the Game Management module in OpenERP.
-
-## Entity-Relationship Diagram
-
-```mermaid
 erDiagram
-    %% Core Entity
+
+    %% =========================
+    %% CORE ENTITY
+    %% =========================
+
     GAME {
         Integer id PK
-        String title
-        Date release_date
+        String name
+        Text description
+        Datetime release_date
         Float price
-        Integer series_id FK
+        String status
         Integer publisher_id FK
         Integer studio_id FK
+        Integer series_id FK
     }
 
-    %% 1-to-Many Relationships
-    SERIES ||--o{ GAME : "contains"
+    %% =========================
+    %% GAME VERSION
+    %% =========================
+
+    GAME_VERSION {
+        Integer id PK
+        String version_name
+        Text enhancement_notes
+        Datetime release_date
+        String status
+        Integer game_id FK
+    }
+
+    GAME ||--o{ GAME_VERSION : "has versions"
+
+    %% =========================
+    %% SERIES
+    %% =========================
+
     SERIES {
         Integer id PK
         String name
-        String description
+        Text description
     }
 
-    PUBLISHER ||--o{ GAME : "publishes"
+    SERIES ||--o{ GAME : "contains"
+
+    %% =========================
+    %% PUBLISHER
+    %% =========================
+
     PUBLISHER {
         Integer id PK
         String name
         String country
     }
 
-    STUDIO ||--o{ GAME : "develops"
+    PUBLISHER ||--o{ GAME : "publishes"
+
+    %% =========================
+    %% STUDIO
+    %% =========================
+
     STUDIO {
         Integer id PK
         String name
-        String headquarters
+        String headquarter
     }
 
-    STUDIO ||--o{ MEMBER : "employs"
+    STUDIO ||--o{ GAME : "develops"
+
+    %% =========================
+    %% MEMBER
+    %% =========================
+
     MEMBER {
         Integer id PK
         String name
-        String role
     }
 
-    %% Many-to-Many Relationships (Junctions implied)
-    GAME }o--o{ PLATFORM : "is available on"
-    PLATFORM {
+    %% Many-to-Many
+    STUDIO }o--o{ MEMBER : "has members"
+
+    %% =========================
+    %% ROLE
+    %% =========================
+
+    ROLE {
         Integer id PK
         String name
-        String manufacturer
     }
 
-    GAME }o--o{ GENRE : "is categorized as"
+    MEMBER }o--o{ ROLE : "has roles"
+
+    %% =========================
+    %% GENRE
+    %% =========================
+
     GENRE {
         Integer id PK
         String name
     }
+
+    GAME }o--o{ GENRE : "categorized as"
+
+    %% =========================
+    %% PLATFORM
+    %% =========================
+
+    PLATFORM {
+        Integer id PK
+        String name
+    }
+
+    GAME }o--o{ PLATFORM : "available on"

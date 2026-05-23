@@ -2,31 +2,12 @@
 <openerp>
     <data>
         <!-- ====================================================================
-             GAME MANAGEMENT - SEARCH VIEWS, TREE VIEWS, FORM VIEWS, AND ACTIONS
+             GAME MANAGEMENT
              ==================================================================== -->
 
         <!-- ============================================================================
              1. GAME MODEL VIEWS
              ============================================================================ -->
-
-        <!-- GAME Search View -->
-        <record model="ir.ui.view" id="view_game_search">
-            <field name="name">game.search</field>
-            <field name="model">game.game</field>
-            <field name="type">search</field>
-            <field name="arch" type="xml">
-                <search string="Tìm kiếm game">
-                    <field name="name" string="Tên game"/>
-                    <field name="genre" string="Thể loại"/>
-                    <field name="publisher_id" string="Nhà phát hành"/>
-                    <field name="status" string="Trạng thái"/>
-                    <field name="studio_id" string="Nhà phát triển"/>
-                    <separator/>
-                    <filter name="released_games" string="Đã phát hành" domain="[('status','=','released')]"/>
-                    <filter name="upcoming_games" string="Sắp phát hành" domain="[('status','=','upcoming')]"/>
-                </search>
-            </field>
-        </record>
 
         <!-- GAME Tree View -->
         <record model="ir.ui.view" id="view_game_tree">
@@ -36,41 +17,53 @@
             <field name="arch" type="xml">
                 <tree string="Danh sách các tựa game">
                     <field name="name"/>
-                    <field name="studio_id"/>
-                    <field name="publisher_id"/>
-                    <field name="genre"/>
+                    <field name="display_studio_name"/>
+                    <field name="display_name"/>
+                    <field name="display_genres_name"/>
                     <field name="release_date"/>
                     <field name="status"/>
                     <field name="price"/>
+                    <field name="current_version"/>
+                    <field name="latest_version_display"/>
+                    <field name="has_update" invisible="1"/>
+                    <button
+                        name="action_update_game"
+                        string="Cập nhật"
+                        type="object"
+                        icon="gtk-refresh"
+                        attrs="{'invisible':[('has_update','=',False)]}"
+                    />
+                    <field name="create_date"/>
+                    <field name="write_date"/>
                 </tree>
             </field>
         </record>
 
-        <!-- GAME Form View (Modern v7 Layout) -->
         <record model="ir.ui.view" id="view_game_form">
             <field name="name">game.form</field>
             <field name="model">game.game</field>
-            <!-- Removed explicit type field to allow OpenERP 7 rendering -->
             <field name="arch" type="xml">
                 <form string="Thông tin Game" version="7.0">
-                    <header></header>
                     <sheet>
                         <group col="4">
                             <field name="name" colspan="4" string="Tên game:"/>
                         </group>
                         <group col="2" string="Thông tin cơ bản">
-                            <field name="genre" string="Thể loại:"/>
+                            <field name="genres" string="Thể loại:"/>
                             <field name="status" string="Trạng thái:"/>
                             <field name="release_date" string="Ngày phát hành:"/>
                             <field name="price" string="Giá:"/>
                         </group>
                         <group col="2" string="Thông tin phát hành">
                             <field name="publisher_id" string="Nhà phát hành:"/>
-                            <field name="studio_id" string="Nhà phát triển:"/>
+                            <field name="studio_id" string="Studio phát triển game:"/>
                             <field name="series_id" string="Series:"/>
                         </group>
                         <group col="4">
                             <field name="platforms" string="Nền tảng chơi:" colspan="4"/>
+                        </group>
+                        <group col="4">
+                            <field name="version_id" string="Phiên bản:"/>
                         </group>
                         <notebook>
                             <page string="Mô tả">
@@ -89,26 +82,12 @@
         <record model="ir.actions.act_window" id="action_game">
             <field name="name">Thông tin Game</field>
             <field name="res_model">game.game</field>
-            <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
         </record>
 
         <!-- ============================================================================
              2. PUBLISHER MODEL VIEWS
              ============================================================================ -->
-
-        <!-- PUBLISHER Search View -->
-        <record model="ir.ui.view" id="view_publisher_search">
-            <field name="name">publisher.search</field>
-            <field name="model">game.publisher</field>
-            <field name="type">search</field>
-            <field name="arch" type="xml">
-                <search string="Tìm kiếm Nhà phát hành">
-                    <field name="name" string="Tên"/>
-                    <field name="country" string="Quốc gia"/>
-                </search>
-            </field>
-        </record>
 
         <!-- PUBLISHER Tree View -->
         <record model="ir.ui.view" id="view_publisher_tree">
@@ -119,6 +98,8 @@
                 <tree string="Danh sách Nhà phát hành" editable="bottom">
                     <field name="name"/>
                     <field name="country"/>
+                    <field name="create_date"/>
+                    <field name="write_date"/>
                 </tree>
             </field>
         </record>
@@ -152,18 +133,6 @@
              3. STUDIO MODEL VIEWS
              ============================================================================ -->
 
-        <!-- STUDIO Search View -->
-        <record model="ir.ui.view" id="view_studio_search">
-            <field name="name">studio.search</field>
-            <field name="model">game.studio</field>
-            <field name="type">search</field>
-            <field name="arch" type="xml">
-                <search string="Tìm kiếm Nhà phát triển">
-                    <field name="name" string="Tên"/>
-                    <field name="headquarter" string="Trụ sở chính"/>
-                </search>
-            </field>
-        </record>
 
         <!-- STUDIO Tree View -->
         <record model="ir.ui.view" id="view_studio_tree">
@@ -171,9 +140,11 @@
             <field name="model">game.studio</field>
             <field name="type">tree</field>
             <field name="arch" type="xml">
-                <tree string="Danh sách Nhà phát triển">
+                <tree string="Danh sách Studio phát triển game">
                     <field name="name"/>
                     <field name="headquarter"/>
+                    <field name="create_date"/>
+                    <field name="write_date"/>
                 </tree>
             </field>
         </record>
@@ -183,7 +154,7 @@
             <field name="name">studio.form</field>
             <field name="model">game.studio</field>
             <field name="arch" type="xml">
-                <form string="Nhà phát triển" version="7.0">
+                <form string="Studio phát triển game" version="7.0">
                     <header></header>
                     <sheet>
                         <group col="2" string="Thông tin chung">
@@ -195,7 +166,7 @@
                                 <field name="members">
                                     <tree string="Danh sách nhân viên" editable="bottom">
                                         <field name="name" string="Tên"/>
-                                        <field name="role" string="Chức vụ"/>
+                                        <field name="roles" string="Vai trò"/>
                                     </tree>
                                 </field>
                             </page>
@@ -207,7 +178,7 @@
 
         <!-- STUDIO Action -->
         <record model="ir.actions.act_window" id="action_studio">
-            <field name="name">Nhà phát triển</field>
+            <field name="name">Studio phát triển game</field>
             <field name="res_model">game.studio</field>
             <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
@@ -217,20 +188,6 @@
              4. MEMBER MODEL VIEWS
              ============================================================================ -->
 
-        <!-- MEMBER Search View -->
-        <record model="ir.ui.view" id="view_member_search">
-            <field name="name">member.search</field>
-            <field name="model">game.member</field>
-            <field name="type">search</field>
-            <field name="arch" type="xml">
-                <search string="Tìm kiếm Nhân viên">
-                    <field name="name" string="Tên"/>
-                    <field name="role" string="Chức vụ"/>
-                    <field name="studio_id" string="Nhà phát triển"/>
-                </search>
-            </field>
-        </record>
-
         <!-- MEMBER Tree View -->
         <record model="ir.ui.view" id="view_member_tree">
             <field name="name">member.tree</field>
@@ -239,8 +196,10 @@
             <field name="arch" type="xml">
                 <tree string="Danh sách nhân viên">
                     <field name="name"/>
-                    <field name="role"/>
-                    <field name="studio_id"/>
+                    <field name="roles"/>
+                    <field name="display_studios_name"/>
+                    <field name="create_date"/>
+                    <field name="write_date"/>
                 </tree>
             </field>
         </record>
@@ -255,8 +214,12 @@
                     <sheet>
                         <group col="2" string="Thông tin nhân viên">
                             <field name="name" string="Tên:"/>
-                            <field name="role" string="Chức vụ:"/>
-                            <field name="studio_id" string="Nhà phát triển:"/>
+                        </group>
+                        <group>
+                            <field name="studios" string="Studio phát triển game:"/>
+                        </group>
+                        <group>
+                            <field name="roles" string="Vai trò:"/>
                         </group>
                     </sheet>
                 </form>
@@ -275,18 +238,6 @@
              5. GENRE MODEL VIEWS
              ============================================================================ -->
 
-        <!-- GENRE Search View -->
-        <record model="ir.ui.view" id="view_genre_search">
-            <field name="name">genre.search</field>
-            <field name="model">game.genre</field>
-            <field name="type">search</field>
-            <field name="arch" type="xml">
-                <search string="Tìm kiếm Thể loại">
-                    <field name="name" string="Tên thể loại"/>
-                </search>
-            </field>
-        </record>
-
         <!-- GENRE Tree View -->
         <record model="ir.ui.view" id="view_genre_tree">
             <field name="name">genre.tree</field>
@@ -295,6 +246,8 @@
             <field name="arch" type="xml">
                 <tree string="Danh sách thể loại" editable="bottom">
                     <field name="name" string="Tên thể loại"/>
+                    <field name="create_date"/>
+                    <field name="write_date"/>
                 </tree>
             </field>
         </record>
@@ -327,18 +280,6 @@
              6. PLATFORM MODEL VIEWS
              ============================================================================ -->
 
-        <!-- PLATFORM Search View -->
-        <record model="ir.ui.view" id="view_platform_search">
-            <field name="name">platform.search</field>
-            <field name="model">game.platform</field>
-            <field name="type">search</field>
-            <field name="arch" type="xml">
-                <search string="Tìm kiếm Nền tảng">
-                    <field name="name" string="Tên nền tảng"/>
-                </search>
-            </field>
-        </record>
-
         <!-- PLATFORM Tree View -->
         <record model="ir.ui.view" id="view_platform_tree">
             <field name="name">platform.tree</field>
@@ -347,6 +288,8 @@
             <field name="arch" type="xml">
                 <tree string="Danh sách nền tảng" editable="bottom">
                     <field name="name" string="Tên nền tảng"/>
+                    <field name="create_date"/>
+                    <field name="write_date"/>
                 </tree>
             </field>
         </record>
@@ -379,18 +322,6 @@
              7. SERIES MODEL VIEWS
              ============================================================================ -->
 
-        <!-- SERIES Search View -->
-        <record model="ir.ui.view" id="view_series_search">
-            <field name="name">series.search</field>
-            <field name="model">game.series</field>
-            <field name="type">search</field>
-            <field name="arch" type="xml">
-                <search string="Tìm kiếm Series">
-                    <field name="name" string="Tên series"/>
-                </search>
-            </field>
-        </record>
-
         <!-- SERIES Tree View -->
         <record model="ir.ui.view" id="view_series_tree">
             <field name="name">series.tree</field>
@@ -399,6 +330,8 @@
             <field name="arch" type="xml">
                 <tree string="Danh sách series">
                     <field name="name"/>
+                    <field name="create_date"/>
+                    <field name="write_date"/>
                 </tree>
             </field>
         </record>
@@ -432,5 +365,74 @@
             <field name="view_mode">tree,form</field>
         </record>
 
+                <!-- ============================================================================
+             8. ROLE MODEL VIEWS
+             ============================================================================ -->
+        <record model="ir.ui.view" id="view_role_tree">
+            <field name="name">role.tree</field>
+            <field name="model">game.role</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Danh sách vai trò">
+                    <field name="name" string="Tên vai trò"/>
+                    <field name="create_date"/>
+                    <field name="write_date"/>
+                </tree>
+            </field>
+
+        </record>
+
+        <record model="ir.ui.view" id="view_role_form">
+            <field name="name">role.form</field>
+            <field name="model">game.role</field>
+            <field name="arch" type="xml">
+                <form string="Form Vai trò" version="7.0">
+                    <group>
+                        <field name="name" string="Tên vai trò"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_role">
+            <field name="name"> Vai trò </field>
+            <field name="res_model">game.role</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+            <!-- ============================================================================
+             1. VERSION MODEL VIEWS
+             ============================================================================ -->
+        <record model="ir.ui.view" id="view_version_tree">
+            <field name="name">version.tree</field>
+            <field name="model">game.version</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="Danh sách phiên bản">
+                    <field name="version_name" string="Số phiên bản"/>
+                    <field name="enhancement_notes" string="Thông tin cải tiến"/>
+                    <field name="game_id" string="Game"/>
+                    <field name="create_date"/>
+                    <field name="write_date"/>
+                </tree>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="view_version_form">
+            <field name="name">version.form</field>
+            <field name="model">game.version</field>
+            <field name="arch" type="xml">
+                <form string="Form Phiên bản" version="7.0">
+                    <group>
+                        <field name="version_name" attrs="{'readonly':[('game_id','!=',False)]}" string="Số phiên bản"/>
+                        <field name="enhancement_notes" string="Thông tin cải tiến"/>
+                        <field name="game_id" attrs="{'readonly':[('version_name','!=',False)]}" string="Game"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="action_version">
+            <field name="name"> Phiên bản </field>
+            <field name="res_model">game.version</field>
+            <field name="view_mode">tree,form</field>
+        </record>
     </data>
 </openerp>

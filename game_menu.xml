@@ -6,18 +6,21 @@
 
         <!-- Nhóm Quản lý Game (Games, Series, Genres, Platforms) -->
         <menuitem id="menu_game_parent" name="Games" parent="game_parent" sequence="10"/>
-        
+
         <!-- action_game handles both the Tree list and Form view automatically now -->
         <menuitem action="action_game" id="menu_game_list" name="Danh sách game" parent="menu_game_parent" sequence="10"/>
-        <menuitem action="action_series" id="menu_series_list" name="Series" parent="menu_game_parent" sequence="20"/>
-        <menuitem action="action_genre" id="menu_genre_list" name="Thể loại" parent="menu_game_parent" sequence="30"/>
-        <menuitem action="action_platform" id="menu_platform_list" name="Nền tảng" parent="menu_game_parent" sequence="40"/>
+        <menuitem action="action_version" id="menu_version_list" name="Phiên bản" parent="menu_game_parent" sequence="20"/>
+        <menuitem action="action_series" id="menu_series_list" name="Series" parent="menu_game_parent" sequence="30"/>
+        <menuitem action="action_genre" id="menu_genre_list" name="Thể loại" parent="menu_game_parent" sequence="40"/>
+        <menuitem action="action_platform" id="menu_platform_list" name="Nền tảng" parent="menu_game_parent" sequence="50"/>
 
         <!-- Nhóm Tổ chức & Nhân sự (Publishers, Studios, Members) -->
         <menuitem id="menu_company_parent" name="Tổ chức &amp; Nhân sự" parent="game_parent" sequence="20"/>
-        
+
         <menuitem action="action_publisher" id="menu_publisher_list" name="Nhà phát hành" parent="menu_company_parent" sequence="10"/>
-        <menuitem action="action_studio" id="menu_studio_list" name="Nhà phát triển" parent="menu_company_parent" sequence="20"/>
+        <menuitem action="action_studio" id="menu_studio_list" name="Studio phát triển game" parent="menu_company_parent" sequence="20"/>
         <menuitem action="action_member" id="menu_member_list" name="Nhân viên" parent="menu_company_parent" sequence="30"/>
+
+        <menuitem action="action_role" id="menu_role_list" name="Vai tro" parent="menu_company_parent" sequence="40"/>
     </data>
 </openerp>

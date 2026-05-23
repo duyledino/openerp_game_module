@@ -19,7 +19,7 @@ from openerp.osv import fields, osv
 
 class Game(osv.Model):
     """Represents a video game title in the database"""
-    
+
     _name = 'game.game'  # Database table: game_game (underscores become table names)
     _columns = {
         # All fields defined here
@@ -69,7 +69,7 @@ class Game(osv.Model):
     _name = 'game.game'
     _columns = {
         'name': fields.char('Tên game', size=25, required=True),
-        
+
         # Many2One: This game has ONE publisher
         'publisher_id': fields.many2one(
             'game.publisher',  # Target model
@@ -113,7 +113,7 @@ class Studio(osv.Model):
     _name = 'game.studio'
     _columns = {
         'name': fields.char('Tên nhà phát triển', size=25, required=True),
-        
+
         # One2Many: This studio has MANY members
         'members': fields.one2many(
             'game.member',     # Target model (the child model)
@@ -127,7 +127,7 @@ class Member(osv.Model):
     _columns = {
         'name': fields.char('Tên nhân viên', size=25, required=True),
         'role': fields.char('Chức vụ', size=25),
-        
+
         # This is the "other side" of the one2many relationship
         'studio_id': fields.many2one(
             'game.studio',
@@ -179,7 +179,7 @@ class Game(osv.Model):
     _name = 'game.game'
     _columns = {
         'name': fields.char('Tên game', size=25, required=True),
-        
+
         # Many2Many: This game is on MANY platforms
         'platforms': fields.many2many(
             'game.platform',           # Target model
@@ -226,7 +226,7 @@ Game: "The Witcher 3" is on:
 
 **Practical Code (Form View with Many2Many Tags Widget):**
 ```xml
-<field name="platforms" 
+<field name="platforms"
        widget="many2many_tags"
        string="Nền tảng chơi:"
        colspan="4"/>
@@ -468,7 +468,7 @@ Embed a child list directly in a parent form with inline editing.
 **OpenERP v7 Standard:**
 
 ```xml
-<field name="platforms" 
+<field name="platforms"
        string="Nền tảng chơi:"
        colspan="4"/>
 ```
@@ -488,7 +488,7 @@ AttributeError: 'NoneType' object has no attribute '_name_search'
 
 **Real-world Example:**
 ```
-Platforms: 
+Platforms:
   ☑ PC (Windows)
   ☑ PlayStation 5
   ☐ Xbox Series X
@@ -520,14 +520,14 @@ Search views allow users to find and filter records.
             <field name="name" string="Tên game"/>
             <field name="genre" string="Thể loại"/>
             <field name="publisher_id" string="Nhà phát hành"/>
-            
+
             <!-- Separator for logical grouping -->
             <separator/>
-            
+
             <!-- Quick filters (predefined domain queries) -->
-            <filter name="released" string="Đã phát hành" 
+            <filter name="released" string="Đã phát hành"
                     domain="[('status','=','released')]"/>
-            <filter name="upcoming" string="Sắp phát hành" 
+            <filter name="upcoming" string="Sắp phát hành"
                     domain="[('status','=','upcoming')]"/>
         </search>
     </field>
@@ -604,7 +604,7 @@ Window Actions connect views to the menu system and define default behaviors.
 **Later, in game_menu.xml:**
 ```xml
 <menuitem id="menu_game_root" name="Game Management"/>
-<menuitem id="menu_game" name="Games" 
+<menuitem id="menu_game" name="Games"
           parent="menu_game_root"
           action="action_game"/>
 ```
@@ -646,7 +646,7 @@ Here's a complete, production-ready form structure:
 
                 <!-- Many2Many Tags: Platforms -->
                 <group col="4">
-                    <field name="platforms" 
+                    <field name="platforms"
                            widget="many2many_tags"
                            string="Nền tảng chơi:"
                            colspan="4"/>
@@ -661,7 +661,7 @@ Here's a complete, production-ready form structure:
 
                     <!-- Tab 2: Technical Details -->
                     <page string="Chi tiết">
-                        <field name="notes" nolabel="1" 
+                        <field name="notes" nolabel="1"
                                placeholder="Thêm các chi tiết bổ sung..."/>
                     </page>
                 </notebook>
@@ -723,7 +723,7 @@ Remove duplicates from selection fields:
 Help users fill fields correctly:
 
 ```xml
-<field name="notes" 
+<field name="notes"
        placeholder="Thêm các chi tiết bổ sung về tựa game..."/>
 <!-- Lighter text shown when field is empty -->
 ```
@@ -787,8 +787,8 @@ Ensure dependent modules are listed in `__openerp__.py`:
 9. **User clicks "Save"** → ORM validates all required fields
 10. **Database INSERT executed**:
     ```sql
-    INSERT INTO game_game 
-    (name, description, genre, release_date, status, notes, price, 
+    INSERT INTO game_game
+    (name, description, genre, release_date, status, notes, price,
      publisher_id, studio_id, series_id)
     VALUES (...)
     ```
@@ -848,6 +848,39 @@ Ensure dependent modules are listed in `__openerp__.py`:
 # ✓ Works when game.publisher has records
 # ✓ Dropdown is empty if no publishers exist
 ```
+
+---
+
+## 16. Development & Database Setup
+
+### Starting OpenERP
+
+To manage and run the OpenERP server, use the following commands:
+
+* **Install/Initialize the Module:**
+  ```cmd
+  openerp-server.exe -c openerp-server.conf -d duy -i game_management --stop-after-init
+  ```
+
+* **Start with a specific database (`duy_cor`):**
+  ```cmd
+  openerp-server.exe -c openerp-server.conf -d duy_cor
+  ```
+
+* **Start standard OpenERP server:**
+  ```cmd
+  openerp-server.exe -c openerp-server.conf
+  ```
+
+### PostgreSQL Connection Details
+
+The PostgreSQL database connection settings used in the environment:
+
+* **Host:** `localhost`
+* **Port:** `5433`
+* **User:** `openerp` (`-U openerp`)
+* **Database:** `duy_cor` (`-d duy_cor`)
+* **Password:** `123456`
 
 ---
 

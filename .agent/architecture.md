@@ -1,61 +1,134 @@
-# Database Architecture: Game Management System
-
-This document outlines the core relational database structure for the Game Management module in OpenERP.
-
-## Entity-Relationship Diagram
-
 ```mermaid
 erDiagram
-    %% Core Entity
+
+    %% =========================
+    %% GAME
+    %% =========================
+
     GAME {
         Integer id PK
-        String title
-        Date release_date
+        String name
+        Text description
+        Datetime create_date
+        Datetime write_date
+        Datetime release_date
+        String status
+        Text notes
         Float price
-        Integer series_id FK
+        String current_version
+        String display_name
+        String display_studio_name
+        String display_genres_name
+        Boolean has_update
+        String latest_version_display
         Integer publisher_id FK
         Integer studio_id FK
+        Integer series_id FK
     }
 
-    %% 1-to-Many Relationships
-    SERIES ||--o{ GAME : "contains"
+    GAME ||--o{ GAME_VERSION : "has versions"
+    GAME }o--o{ GENRE : "categorized as"
+    GAME }o--o{ PLATFORM : "available on"
+    GAME }o--|| PUBLISHER : "published by"
+    GAME }o--|| STUDIO : "developed by"
+    GAME }o--|| SERIES : "belongs to"
+
+    %% =========================
+    %% GAME VERSION
+    %% =========================
+
+    GAME_VERSION {
+        Integer id PK
+        String version_name
+        Text enhancement_notes
+        Datetime create_date
+        Datetime write_date
+        Integer game_id FK
+    }
+
+    %% =========================
+    %% SERIES
+    %% =========================
+
     SERIES {
         Integer id PK
         String name
-        String description
+        Text description
+        Datetime create_date
+        Datetime write_date
     }
 
-    PUBLISHER ||--o{ GAME : "publishes"
+    %% =========================
+    %% PUBLISHER
+    %% =========================
+
     PUBLISHER {
         Integer id PK
         String name
         String country
+        Datetime create_date
+        Datetime write_date
     }
 
-    STUDIO ||--o{ GAME : "develops"
+    %% =========================
+    %% STUDIO
+    %% =========================
+
     STUDIO {
         Integer id PK
         String name
-        String headquarters
+        String headquarter
+        Datetime create_date
+        Datetime write_date
     }
 
-    STUDIO ||--o{ MEMBER : "employs"
+    STUDIO }o--o{ MEMBER : "has members"
+
+    %% =========================
+    %% MEMBER
+    %% =========================
+
     MEMBER {
         Integer id PK
         String name
-        String role
+        String display_studios_name
+        Datetime create_date
+        Datetime write_date
     }
 
-    %% Many-to-Many Relationships (Junctions implied)
-    GAME }o--o{ PLATFORM : "is available on"
-    PLATFORM {
+    MEMBER }o--o{ ROLE : "has roles"
+    MEMBER }o--o{ STUDIO : "works at"
+
+    %% =========================
+    %% ROLE
+    %% =========================
+
+    ROLE {
         Integer id PK
         String name
-        String manufacturer
+        Datetime create_date
+        Datetime write_date
     }
 
-    GAME }o--o{ GENRE : "is categorized as"
+    %% =========================
+    %% GENRE
+    %% =========================
+
     GENRE {
         Integer id PK
         String name
+        Datetime create_date
+        Datetime write_date
     }
+
+    %% =========================
+    %% PLATFORM
+    %% =========================
+
+    PLATFORM {
+        Integer id PK
+        String name
+        Datetime create_date
+        Datetime write_date
+    }
+```

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <openerp>
     <data>
         <!-- ====================================================================
@@ -78,11 +78,47 @@
             </field>
         </record>
 
+        <!-- GAME Search View -->
+        <record model="ir.ui.view" id="view_game_search">
+            <field name="name">game.search</field>
+            <field name="model">game.game</field>
+            <field name="type">search</field>
+            <field name="arch" type="xml">
+                <search string="Tìm kiếm game">
+                    <group col="4" string="Tìm kiếm">
+                        <field name="name" select="1" string="Tên game" filter_domain="[('name', 'ilike', self)]"/>
+                        <field name="studio_id" select="1" string="Studio phát triển"/>
+                        <field name="series_id" select="1" string="Series"/>
+                        <field name="publisher_id" select="1" string="Nhà phát hành"/>
+                        <field name="price" string="Giá" filter_domain="[('price', '>=', self)]"/>
+                        <field name="create_date" string="Ngày tạo" filter_domain="[('create_date', '>=', self)]"/>
+                        <field name="release_date" string="Ngày phát hành" filter_domain="[('release_date', '>=', self)]"/>
+                    </group>
+                    <separator/>
+                    <filter string="Game tạo từ hôm nay"
+                        name="create_date_today"
+                        domain="[('create_date','>=', time.strftime('%%Y-%%m-%%d 00:00:00'))]"/>
+
+                    <filter string="Game phát hành từ hôm nay"
+                        name="release_date_today"
+                        domain="[('release_date','>=', time.strftime('%%Y-%%m-%%d 00:00:00'))]"/>
+                    <filter string="Đã phát hành" name="released" domain="[('status', '=', 'released')]"/>
+                    <filter string="Sắp phát hành" name="upcoming" domain="[('status', '=', 'upcoming')]"/>
+                    <filter string="Đã huỷ" name="cancelled" domain="[('status', '=', 'cancelled')]"/>
+                    <group expand="0" string="Nhóm theo">
+                        <filter string="Studio" name="group_studio" context="{'group_by': 'studio_id'}"/>
+                        <filter string="Series" name="group_series" context="{'group_by': 'series_id'}"/>
+                        <filter string="Nhà phát hành" name="group_publisher" context="{'group_by': 'publisher_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
         <!-- GAME Action -->
         <record model="ir.actions.act_window" id="action_game">
             <field name="name">Thông tin Game</field>
             <field name="res_model">game.game</field>
             <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_game_search"/>
         </record>
 
         <!-- ============================================================================
@@ -422,9 +458,9 @@
             <field name="arch" type="xml">
                 <form string="Form Phiên bản" version="7.0">
                     <group>
-                        <field name="version_name" attrs="{'readonly':[('game_id','!=',False)]}" string="Số phiên bản"/>
+                        <field name="version_name" string="Số phiên bản"/>
                         <field name="enhancement_notes" string="Thông tin cải tiến"/>
-                        <field name="game_id" attrs="{'readonly':[('version_name','!=',False)]}" string="Game"/>
+                        <field name="game_id" string="Game"/>
                     </group>
                 </form>
             </field>

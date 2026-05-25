@@ -9,7 +9,7 @@
     "depends":["base"],#khai bao nhung module lien quan
     "init_xml":[],
     "update_xml":["game_view.xml","game_menu.xml"],
-    "demo_xml":["game_demo.xml"],
+    "demo_xml":["game_demoq.xml"],
     "active":False,
     "installable":True,
 }

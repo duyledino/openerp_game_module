@@ -26,7 +26,7 @@
                     <field name="publisher_id"/>
                     <field name="studio_id"/>
                     <field name="series_id"/>
-                    <field name="version_id"/>
+                    <field name="display_version_name"/>
                     <field name="current_version"/>
                     <field name="latest_version_display"/>
                     <field name="has_update" invisible="1"/>
@@ -463,9 +463,18 @@
             <field name="arch" type="xml">
                 <form string="Form Phiên bản" version="7.0">
                     <group>
-                        <field name="version_name" string="Số phiên bản"/>
+
+
+                        <!-- Trick to use the handle disable field -->
+                        <field name="create_date" invisible="1"/>
+
+                        <field name="version_name" string="Số phiên bản"
+                        attrs="{'readonly':[('create_date','!=',False)]}"
+                        />
                         <field name="enhancement_notes" string="Thông tin cải tiến"/>
-                        <field name="game_id" string="Game"/>
+                        <field name="game_id" string="Game"
+                        attrs="{'readonly':[('create_date','!=',False)]}"
+                        />
                     </group>
                 </form>
             </field>

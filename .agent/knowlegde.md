@@ -858,6 +858,7 @@ Ensure dependent modules are listed in `__openerp__.py`:
 To manage and run the OpenERP server, use the following commands:
 
 * **Install/Initialize the Module:**
+
   ```cmd
   openerp-server.exe -c openerp-server.conf -d duy -i game_management --stop-after-init
   ```
@@ -871,7 +872,11 @@ To manage and run the OpenERP server, use the following commands:
   ```cmd
   openerp-server.exe -c openerp-server.conf
   ```
+* **Start standard OpenERP server with debug log level:**
 
+```cmd
+.\openerp-server.exe -c .\openerp-server.conf -d duy_cor --log-level=debug
+```
 ### PostgreSQL Connection Details
 
 The PostgreSQL database connection settings used in the environment:

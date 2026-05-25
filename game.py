@@ -178,6 +178,27 @@ class Game(osv.osv):
 
         return super(Game, self).write(cr, uid, ids, vals, context=context)
 
+    def _get_version_display(self, cr, uid, ids, field_name, arg, context=None):
+        """
+        This method returns the display name of the versions for the given record.
+        It is used to display the versions's name in the tree view and form view.
+        """
+        print("field_name: ", field_name)
+        print("arg: ", arg)
+        result = {}
+        records = self.browse(cr, uid, ids, context=context)
+        print("id's: ",records)
+        for game in records:
+            print("id's: ",game)
+            print("game.version_id: ",game.version_id)
+            # print("game.version_id.name: ",game.version_id.name)
+            if game.version_id:
+                result[game.id] = ", ".join([v.version_name for v in game.version_id])
+            else:
+                result[game.id] = 'Chưa có thông tin về phiên bản game'
+
+        return result
+
     def _get_genres_display(self, cr, uid, ids, field_name, arg, context=None):
         """
         This method returns the display name of the genres for the given record.
@@ -408,7 +429,7 @@ class Game(osv.osv):
         ),
 
 
-        'display_name':fields.function(
+        'display_publisher_name':fields.function(
         _get_publisher_display
         ,type='char'
         ,string='Tên nhà phát hành'
@@ -422,6 +443,11 @@ class Game(osv.osv):
         _get_genres_display
         ,type='char'
         ,string='Tên Thể Loại'
+        ),
+        'display_version_name':fields.function(
+        _get_version_display
+        ,type='char'
+        ,string='Các phiên bản'
         ),
         'create_date': fields.datetime(
             'Ngày Tạo',
@@ -861,7 +887,7 @@ class Platform(osv.osv):
             if vals['name'] == '':
                 raise osv.except_osv(
                     u'Lỗi',
-                    u'Tên máy tính không được để trống!'
+                    u'Tên nền tảng không được để trống!'
                 )
             existing = self.search(
                 cr,
@@ -872,7 +898,7 @@ class Platform(osv.osv):
             if existing:
                 raise osv.except_osv(
                     u'Lỗi',
-                    u'Tên máy tính đã tồn tại!'
+                    u'Tên nền tảng đã tồn tại!'
                 )
         return super(Platform, self).create(cr, uid, vals, context=context)
 
@@ -882,7 +908,7 @@ class Platform(osv.osv):
             if vals['name'] == '':
                 raise osv.except_osv(
                     u'Lỗi',
-                    u'Tên máy tính không được để trống!'
+                    u'Tên nền tảng không được để trống!'
                 )
             existing = self.search(
                 cr,
@@ -893,7 +919,7 @@ class Platform(osv.osv):
             if existing:
                 raise osv.except_osv(
                     u'Lỗi',
-                    u'Tên máy tính đã tồn tại!'
+                    u'Tên nền tảng đã tồn tại!'
                 )
         return super(Platform, self).write(cr, uid, ids, vals, context=context)
 
@@ -1073,6 +1099,9 @@ class GameVersion(osv.osv):
 
     _name = 'game.version'
 
+    def _version_tuple(self, version):
+        return tuple(map(int, version.split('.')))
+
     def create(self, cr, uid, vals, context=None):
 
         if 'version_name' in vals:
@@ -1106,6 +1135,38 @@ class GameVersion(osv.osv):
                     u'Lỗi',
                     u'Tên phiên bản đã tồn tại!'
                 )
+
+            print('vals111111111111111111111111', vals)
+
+            version_ids = self.search(
+                cr,
+                uid,
+                [('game_id', '=', vals.get('game_id'))],
+                order='id desc',
+                limit=1
+            )
+
+            print('version_ids111111111111111111111111', version_ids)
+
+            if version_ids:
+                latest_version = self.browse(
+                    cr,
+                    uid,
+                    version_ids[0],
+                    context=context
+                )
+
+                current = self._version_tuple(vals['version_name'])
+                latest = self._version_tuple(latest_version.version_name)
+
+                print('current111111111111111111111111', current)
+                print('latest111111111111111111111111', latest)
+
+                if current <= latest:
+                    raise osv.except_osv(
+                        u'Lỗi',
+                        u'Số phiên bản phải lớn hơn phiên bản đã tồn tại!'
+                    )
 
         return super(GameVersion, self).create(
             cr,
@@ -1160,6 +1221,31 @@ class GameVersion(osv.osv):
                     u'Lỗi',
                     u'Tên phiên bản đã tồn tại!'
                 )
+
+            version_ids = self.search(
+                cr,
+                uid,
+                [('game_id', '=', vals.get('game_id'))],
+                order='id desc',
+                limit=1
+            )
+
+            if version_ids:
+                latest_version = self.browse(
+                    cr,
+                    uid,
+                    version_ids[0],
+                    context=context
+                )
+
+                current = self._version_tuple(vals['version_name'])
+                latest = self._version_tuple(latest_version.version_name)
+
+                if current <= latest:
+                    raise osv.except_osv(
+                        u'Lỗi',
+                        u'Số phiên bản phải lớn hơn phiên bản đã tồn tại!'
+                    )
 
         return super(GameVersion, self).write(
             cr,

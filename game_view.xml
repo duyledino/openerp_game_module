@@ -22,6 +22,7 @@
                     <field name="platforms"/>
                     <field name="release_date"/>
                     <field name="status"/>
+                    <field name="is_free"/>
                     <field name="price"/>
                     <field name="publisher_id"/>
                     <field name="studio_id"/>
@@ -57,12 +58,15 @@
                             <field name="genres" string="Thể loại:"/>
                             <field name="status" string="Trạng thái:"/>
                             <field name="release_date" string="Ngày phát hành:"/>
+                            <field name="is_free" string="Miễn phí"/>
                             <field name="price" string="Giá:"/>
                         </group>
                         <group col="2" string="Thông tin phát hành">
                             <field name="publisher_id" string="Nhà phát hành:"/>
                             <field name="studio_id" string="Studio phát triển game:"/>
                             <field name="series_id" string="Series:"/>
+                            <field name="current_version" readonly="1" string="Phiên bản hiện tại:"/>
+                            <field name="latest_version_display" readonly="1" string="Trạng thái cập nhật:"/>
                         </group>
                         <group col="4">
                             <field name="platforms" string="Nền tảng chơi:" colspan="4"/>

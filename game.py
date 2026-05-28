@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+import logging
 from openerp.osv import fields, osv
 
 try:
     integer_types = (int, long)
 except NameError:
     integer_types = (int,)
+
+_logger = logging.getLogger(__name__)
 
 
 def _as_list(ids):
@@ -55,34 +58,96 @@ class Game(osv.osv):
             _raise_delete_restricted(u'game')
         return super(Game, self).unlink(cr, uid, ids, context=context)
 
-    def create(self, cr, uid, vals, context=None):
-    # ('vals', {u'status': u'released', u'name': u'\u0111\xe0', u'release_date': u'2009-05-05 00:00:00', u'series_id': 1, u'platforms':
-    # [[6, False, [1]]], u'notes': False, u'genre': u'rpg', u'studio_id': 1, u'publisher_id': 2, u'price': 1, u'description': False})
-        print("vals", vals)
+    def _validate_release_date_status(self, status, release_date):
+        """
+        Validate release date against status rules.
+        - released -> date must be today or in the past
+        - upcoming -> date must be in the future
+        - cancelled -> no restriction
+        """
+        if release_date is False or release_date is None:
+            raise osv.except_osv(
+                u'Lỗi',
+                u'Ngày phát hành không được để trống!'
+            )
 
-        if 'price' in vals:
-            print("price", vals['price'])
-            if vals['price'] <= 0:
+        release_date = datetime.strptime(release_date, '%Y-%m-%d %H:%M:%S')
+        now = datetime.now()
+
+        if status == 'released' and release_date > now:
+            raise osv.except_osv(
+                u'Lỗi',
+                u'Game đã phát hành phải có ngày phát hành trước hoặc bằng ngày hiện tại!'
+            )
+
+        if status == 'upcoming' and release_date <= now:
+            raise osv.except_osv(
+                u'Lỗi',
+                u'Game sắp phát hành phải có ngày phát hành sau ngày hiện tại!'
+            )
+
+    def _validate_price_logic(self, cr, uid, ids, vals, context=None):
+        """
+        Enforce game price business rules based on the free flag.
+        - if is_free is True: price must be 0
+        - otherwise: price must be greater than 0
+        """
+        current_price = None
+        current_is_free = False
+
+        if ids:
+            record = self.browse(cr, uid, ids[0], context=context)
+            current_price = record.price
+            current_is_free = record.is_free
+
+        is_free = vals.get('is_free', current_is_free)
+        price = vals.get('price', current_price)
+
+        if is_free:
+            if price is not None and price != 0:
                 raise osv.except_osv(
                     u'Lỗi',
-                    u'Giá game phải lớn hơn 0!'
+                    u'Game miễn phí phải có giá bằng 0!'
+                )
+        else:
+            if price is None or price <= 0:
+                raise osv.except_osv(
+                    u'Lỗi',
+                    u'Game không miễn phí phải có giá lớn hơn 0!'
                 )
 
-        if 'release_date' in vals:
-            if vals['release_date'] is False:
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Ngày phát hành không được để trống!'
-            )
-            print("release_date", vals['release_date'])
-            print("datetime.now()", datetime.now())
-            release_date = datetime.strptime(vals['release_date'], '%Y-%m-%d %H:%M:%S')
-            if release_date <= datetime.now():
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Ngày phát hành không được trước hoặc trùng với ngày hiện tại!'
+    def _validate_unique_name(self, cr, uid, vals, exclude_ids=None, context=None):
+        """
+        Validate game name field and prevent duplicate names.
+        """
+        if 'name' not in vals:
+            return
+
+        vals['name'] = vals['name'].strip()
+        if vals['name'] == '':
+            raise osv.except_osv(
+                u'Lỗi',
+                u'Tên game không được để trống!'
             )
 
+        domain = [('name', '=', vals['name'])]
+        if exclude_ids:
+            domain.append(('id', 'not in', exclude_ids))
+
+        existing = self.search(
+            cr,
+            uid,
+            domain,
+            context=context
+        )
+        if existing:
+            raise osv.except_osv(
+                u'Lỗi',
+                u'Tên game đã tồn tại!'
+            )
+
+    def create(self, cr, uid, vals, context=None):
+        _logger.info('game.game create: uid=%s vals=%s', uid, vals)
         if 'publisher_id' not in vals:
             raise osv.except_osv(
                 u'Lỗi',
@@ -101,80 +166,48 @@ class Game(osv.osv):
                 u'Ngày phát hành không được để trống!'
             )
 
+        self._validate_price_logic(cr, uid, None, vals, context=context)
 
-        if 'name' in vals:
-            vals['name'] = vals['name'].strip()
-            if vals['name'] == '':
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Tên game không được để trống!'
-                )
-            existing = self.search(
-                cr,
-                uid,
-                [('name', '=', vals['name'])],
-                context=context
-            )
-            if existing:
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Tên game đã tồn tại!'
-                )
+        status = vals.get('status')
+        if status and 'release_date' in vals:
+            self._validate_release_date_status(status, vals['release_date'])
+
+        self._validate_unique_name(
+            cr,
+            uid,
+            vals,
+            exclude_ids=None,
+            context=context
+        )
 
         return super(Game, self).create(cr, uid, vals, context=context)
 
     def write(self, cr, uid, ids, vals, context=None):
-        print("vals in write", vals)
-        # if 'publisher_id' not in vals:
-        #     raise osv.except_osv(
-        #         u'Lỗi',
-        #         u'Nhà phát hành không được để trống!'
-        #     )
+        _logger.info('game.game write: uid=%s ids=%s vals=%s', uid, ids, vals)
+        game = self.browse(cr, uid, ids[0], context=context)
+        current_status = game.status
+        new_status = vals.get('status', current_status)
+        new_release_date = vals.get('release_date', game.release_date)
 
-        # if 'studio_id' not in vals:
-        #     raise osv.except_osv(
-        #         u'Lỗi',
-        #         u'Studio phát triển game không được để trống!'
-        #     )
-        if 'release_date' in vals:
-            print("release_date", vals['release_date'])
-            print("datetime.now()", datetime.now())
-            release_date = datetime.strptime(vals['release_date'], '%Y-%m-%d %H:%M:%S')
-            if release_date <= datetime.now():
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Ngày phát hành không được trước hoặc trùng với ngày hiện tại!'
+        if 'release_date' in vals or 'status' in vals:
+            self._validate_release_date_status(new_status, new_release_date)
+
+        # Prevent important business fields from changing after release.
+        if current_status == 'released' and any(key in vals for key in ('studio_id', 'publisher_id', 'series_id', 'genres')):
+            raise osv.except_osv(
+                u'Lỗi',
+                u'Không thể thay đổi Nhà phát hành, Studio, Series hoặc Thể loại sau khi game đã phát hành!'
             )
 
-        if 'price' in vals:
-            print("price", vals['price'])
-            if vals['price'] <= 0:
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Giá game phải lớn hơn 0!'
-                )
+        self._validate_price_logic(cr, uid, ids, vals, context=context)
 
-        if 'name' in vals:
-            vals['name'] = vals['name'].strip()
-            if vals['name'] == '':
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Tên game không được để trống!'
-                )
-            existing = self.search(
-                cr,
-                uid,
-                [
-                    ('name', '=', vals['name']),
-                    ('id', 'not in', ids)
-                ],
-                context=context
-            )
-            if existing:
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Tên game đã tồn tại!'
-                )
+        self._validate_unique_name(
+            cr,
+            uid,
+            vals,
+            exclude_ids=ids,
+            context=context
+        )
 
         return super(Game, self).write(cr, uid, ids, vals, context=context)
 
@@ -390,6 +423,7 @@ class Game(osv.osv):
         'notes': fields.text('Chi tiết'),
 
         'price': fields.float('Giá'),
+        'is_free': fields.boolean('Miễn phí'),
 
         'publisher_id': fields.many2one(
             'game.publisher',
@@ -449,16 +483,6 @@ class Game(osv.osv):
         ,type='char'
         ,string='Các phiên bản'
         ),
-        'create_date': fields.datetime(
-            'Ngày Tạo',
-            readonly=True
-        ),
-
-        'write_date': fields.datetime(
-            'Ngày cập nhật',
-            readonly=True
-        ),
-
         'current_version': fields.char(
             'Phiên bản hiện tại',
             size=20
@@ -493,6 +517,7 @@ class Publisher(osv.osv):
         return super(Publisher, self).unlink(cr, uid, ids, context=context)
 
     def create(self, cr, uid, vals, context=None):
+        _logger.info('game.publisher create: uid=%s vals=%s', uid, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -514,6 +539,7 @@ class Publisher(osv.osv):
         return super(Publisher, self).create(cr, uid, vals, context=context)
 
     def write(self, cr, uid, ids, vals, context=None):
+        _logger.info('game.publisher write: uid=%s ids=%s vals=%s', uid, ids, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -579,6 +605,7 @@ class Studio(osv.osv):
         return super(Studio, self).unlink(cr, uid, ids, context=context)
 
     def create(self, cr, uid, vals, context=None):
+        _logger.info('game.studio create: uid=%s vals=%s', uid, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -600,6 +627,7 @@ class Studio(osv.osv):
         return super(Studio, self).create(cr, uid, vals, context=context)
 
     def write(self, cr, uid, ids, vals, context=None):
+        _logger.info('game.studio write: uid=%s ids=%s vals=%s', uid, ids, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -697,6 +725,7 @@ class Member(osv.osv):
     def create(self, cr, uid, vals, context=None):
     # ('vals', {u'status': u'released', u'name': u'\u0111\xe0', u'release_date': u'2009-05-05 00:00:00', u'series_id': 1, u'platforms':
     # [[6, False, [1]]], u'notes': False, u'genre': u'rpg', u'studio_id': 1, u'publisher_id': 2, u'price': 1, u'description': False})
+        _logger.info('game.member create: uid=%s vals=%s', uid, vals)
         print("vals", vals)
 
         if 'name' in vals:
@@ -721,6 +750,7 @@ class Member(osv.osv):
         return super(Member, self).create(cr, uid, vals, context=context)
 
     def write(self, cr, uid, ids, vals, context=None):
+        _logger.info('game.member write: uid=%s ids=%s vals=%s', uid, ids, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -804,6 +834,7 @@ class Genre(osv.osv):
         return super(Genre, self).unlink(cr, uid, ids, context=context)
 
     def create(self, cr, uid, vals, context=None):
+        _logger.info('game.genre create: uid=%s vals=%s', uid, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -825,6 +856,7 @@ class Genre(osv.osv):
         return super(Genre, self).create(cr, uid, vals, context=context)
 
     def write(self, cr, uid, ids, vals, context=None):
+        _logger.info('game.genre write: uid=%s ids=%s vals=%s', uid, ids, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -882,6 +914,7 @@ class Platform(osv.osv):
         return super(Platform, self).unlink(cr, uid, ids, context=context)
 
     def create(self, cr, uid, vals, context=None):
+        _logger.info('game.platform create: uid=%s vals=%s', uid, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -903,8 +936,8 @@ class Platform(osv.osv):
         return super(Platform, self).create(cr, uid, vals, context=context)
 
     def write(self,cr,uid,ids,vals,context=None):
+        _logger.info('game.platform write: uid=%s ids=%s vals=%s', uid, ids, vals)
         if 'name' in vals:
-            vals['name'] = vals['name'].strip()
             if vals['name'] == '':
                 raise osv.except_osv(
                     u'Lỗi',
@@ -960,6 +993,7 @@ class Series(osv.osv):
         return super(Series, self).unlink(cr, uid, ids, context=context)
 
     def create(self, cr, uid, vals, context=None):
+        _logger.info('game.series create: uid=%s vals=%s', uid, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -981,6 +1015,7 @@ class Series(osv.osv):
         return super(Series, self).create(cr, uid, vals, context=context)
 
     def write(self, cr, uid, ids, vals, context=None):
+        _logger.info('game.series write: uid=%s ids=%s vals=%s', uid, ids, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -1032,6 +1067,7 @@ class Role(osv.osv):
         return super(Role, self).unlink(cr, uid, ids, context=context)
 
     def create(self, cr, uid, vals, context=None):
+        _logger.info('game.role create: uid=%s vals=%s', uid, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -1053,6 +1089,7 @@ class Role(osv.osv):
         return super(Role, self).create(cr, uid, vals, context=context)
 
     def write(self, cr, uid, ids, vals, context=None):
+        _logger.info('game.role write: uid=%s ids=%s vals=%s', uid, ids, vals)
         if 'name' in vals:
             vals['name'] = vals['name'].strip()
             if vals['name'] == '':
@@ -1102,10 +1139,22 @@ class GameVersion(osv.osv):
     def _version_tuple(self, version):
         return tuple(map(int, version.split('.')))
 
+    def _get_latest_version(self, cr, uid, game_id, exclude_ids=None, context=None):
+        version_ids = self.search(
+            cr,
+            uid,
+            [('game_id', '=', game_id)] + ([('id', 'not in', exclude_ids)] if exclude_ids else []),
+            context=context
+        )
+        latest_version = None
+        for version in self.browse(cr, uid, version_ids, context=context):
+            if latest_version is None or self._version_tuple(version.version_name) > self._version_tuple(latest_version.version_name):
+                latest_version = version
+        return latest_version
+
     def create(self, cr, uid, vals, context=None):
-
+        _logger.info('game.version create: uid=%s vals=%s', uid, vals)
         if 'version_name' in vals:
-
             vals['version_name'] = vals['version_name'].strip()
 
             if vals['version_name'] == '':
@@ -1114,10 +1163,24 @@ class GameVersion(osv.osv):
                     u'Tên phiên bản không được để trống!'
                 )
 
-            if not re.match(r'^\d+(\.\d+)*$', vals['version_name']):
+            if not re.match(r'^\d+\.\d+\.\d+$', vals['version_name']):
                 raise osv.except_osv(
                     u'Lỗi',
-                    u'Tên phiên bản phải là số và không chứa ký tự đặc biệt!'
+                    u'Tên phiên bản phải có định dạng MAJOR.MINOR.PATCH!'
+                )
+
+            game_id = vals.get('game_id')
+            if not game_id:
+                raise osv.except_osv(
+                    u'Lỗi',
+                    u'Phiên bản phải liên kết với một Game.'
+                )
+
+            game = self.pool.get('game.game').browse(cr, uid, game_id, context=context)
+            if game.status != 'released':
+                raise osv.except_osv(
+                    u'Lỗi',
+                    u'Chỉ có thể tạo phiên bản cho game đã phát hành.'
                 )
 
             existing = self.search(
@@ -1125,7 +1188,7 @@ class GameVersion(osv.osv):
                 uid,
                 [
                     ('version_name', '=', vals['version_name']),
-                    ('game_id', '=', vals.get('game_id'))
+                    ('game_id', '=', game_id)
                 ],
                 context=context
             )
@@ -1136,32 +1199,10 @@ class GameVersion(osv.osv):
                     u'Tên phiên bản đã tồn tại!'
                 )
 
-            print('vals111111111111111111111111', vals)
-
-            version_ids = self.search(
-                cr,
-                uid,
-                [('game_id', '=', vals.get('game_id'))],
-                order='id desc',
-                limit=1
-            )
-
-            print('version_ids111111111111111111111111', version_ids)
-
-            if version_ids:
-                latest_version = self.browse(
-                    cr,
-                    uid,
-                    version_ids[0],
-                    context=context
-                )
-
+            latest_version = self._get_latest_version(cr, uid, game_id, context=context)
+            if latest_version:
                 current = self._version_tuple(vals['version_name'])
                 latest = self._version_tuple(latest_version.version_name)
-
-                print('current111111111111111111111111', current)
-                print('latest111111111111111111111111', latest)
-
                 if current <= latest:
                     raise osv.except_osv(
                         u'Lỗi',
@@ -1176,40 +1217,51 @@ class GameVersion(osv.osv):
         )
 
     def write(self, cr, uid, ids, vals, context=None):
+        _logger.info('game.version write: uid=%s ids=%s vals=%s', uid, ids, vals)
 
-        if 'version_name' in vals:
+        if 'version_name' in vals or 'game_id' in vals:
 
-            vals['version_name'] = vals['version_name'].strip()
+            if 'version_name' in vals:
+                vals['version_name'] = vals['version_name'].strip()
 
-            if vals['version_name'] == '':
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Tên phiên bản không được để trống!'
-                )
+                if vals['version_name'] == '':
+                    raise osv.except_osv(
+                        u'Lỗi',
+                        u'Tên phiên bản không được để trống!'
+                    )
 
-            if not re.match(r'^\d+(\.\d+)*$', vals['version_name']):
-                raise osv.except_osv(
-                    u'Lỗi',
-                    u'Tên phiên bản phải là số và không chứa ký tự đặc biệt!'
-                )
+                if not re.match(r'^\d+\.\d+\.\d+$', vals['version_name']):
+                    raise osv.except_osv(
+                        u'Lỗi',
+                        u'Tên phiên bản phải có định dạng MAJOR.MINOR.PATCH!'
+                    )
 
-            game_id = vals.get('game_id')
+            current_version = self.browse(
+                cr,
+                uid,
+                ids[0],
+                context=context
+            )
 
+            game_id = vals.get('game_id', current_version.game_id.id)
             if not game_id:
-                current_version = self.browse(
-                    cr,
-                    uid,
-                    ids[0],
-                    context=context
+                raise osv.except_osv(
+                    u'Lỗi',
+                    u'Phiên bản phải liên kết với một Game.'
                 )
 
-                game_id = current_version.game_id.id
+            game = self.pool.get('game.game').browse(cr, uid, game_id, context=context)
+            if game.status != 'released':
+                raise osv.except_osv(
+                    u'Lỗi',
+                    u'Chỉ có thể cập nhật phiên bản cho game đã phát hành.'
+                )
 
             existing = self.search(
                 cr,
                 uid,
                 [
-                    ('version_name', '=', vals['version_name']),
+                    ('version_name', '=', vals.get('version_name', current_version.version_name)),
                     ('game_id', '=', game_id),
                     ('id', 'not in', ids)
                 ],
@@ -1222,25 +1274,10 @@ class GameVersion(osv.osv):
                     u'Tên phiên bản đã tồn tại!'
                 )
 
-            version_ids = self.search(
-                cr,
-                uid,
-                [('game_id', '=', vals.get('game_id'))],
-                order='id desc',
-                limit=1
-            )
-
-            if version_ids:
-                latest_version = self.browse(
-                    cr,
-                    uid,
-                    version_ids[0],
-                    context=context
-                )
-
+            latest_version = self._get_latest_version(cr, uid, game_id, exclude_ids=ids, context=context)
+            if latest_version and 'version_name' in vals:
                 current = self._version_tuple(vals['version_name'])
                 latest = self._version_tuple(latest_version.version_name)
-
                 if current <= latest:
                     raise osv.except_osv(
                         u'Lỗi',

@@ -131,8 +131,8 @@
             <field name="name">Plants vs. Zombies Remastered</field>
             <field name="description">Phiên bản làm mới của game thủ thành Plants vs. Zombies.</field>
             <field name="genres" eval="[(6, 0, [ref('genre_strategy'), ref('genre_casual')])]"/>
-            <field name="release_date">2099-05-05 00:00:00</field>
-            <field name="status">upcoming</field>
+            <field name="release_date">2024-05-05 00:00:00</field>
+            <field name="status">released</field>
             <field name="notes">Hỗ trợ PC và thiết bị di động.</field>
             <field name="price">9.99</field>
             <field name="publisher_id" ref="publisher_1"/>
@@ -146,8 +146,8 @@
             <field name="name">Lien Quan Mobile 2027</field>
             <field name="description">Game MOBA trên di động với nhiều chế độ thi đấu.</field>
             <field name="genres" eval="[(6, 0, [ref('genre_moba')])]"/>
-            <field name="release_date">2099-11-29 00:00:00</field>
-            <field name="status">upcoming</field>
+            <field name="release_date">2024-11-29 00:00:00</field>
+            <field name="status">released</field>
             <field name="notes">Yêu cầu Android 8.0+ hoặc iOS 14.0+.</field>
             <field name="price">1.99</field>
             <field name="publisher_id" ref="publisher_2"/>
@@ -161,8 +161,8 @@
             <field name="name">PUBG Battlegrounds 2099</field>
             <field name="description">Game battle royale nhieu nguoi choi voi ban do rong va chien thuat sinh ton.</field>
             <field name="genres" eval="[(6, 0, [ref('genre_battle_royale'), ref('genre_action')])]"/>
-            <field name="release_date">2099-03-23 00:00:00</field>
-            <field name="status">upcoming</field>
+            <field name="release_date">2024-03-23 00:00:00</field>
+            <field name="status">released</field>
             <field name="notes">Ho tro PC va thiet bi di dong.</field>
             <field name="price">12.99</field>
             <field name="publisher_id" ref="publisher_krafton"/>
@@ -176,8 +176,8 @@
             <field name="name">Clash of Clans 2099</field>
             <field name="description">Game chien thuat xay dung lang, nang cap quan doi va chien dau cung clan.</field>
             <field name="genres" eval="[(6, 0, [ref('genre_strategy'), ref('genre_casual')])]"/>
-            <field name="release_date">2099-08-02 00:00:00</field>
-            <field name="status">upcoming</field>
+            <field name="release_date">2024-08-02 00:00:00</field>
+            <field name="status">released</field>
             <field name="notes">Phu hop cho Android va iOS.</field>
             <field name="price">4.99</field>
             <field name="publisher_id" ref="publisher_supercell"/>
